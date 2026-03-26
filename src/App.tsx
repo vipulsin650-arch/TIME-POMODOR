@@ -5,20 +5,41 @@
 
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload, Image as ImageIcon, Video, X, Clock } from 'lucide-react';
+import { Upload, Image as ImageIcon, Video, X, Clock, Maximize, Minimize } from 'lucide-react';
 
 export default function App() {
   const [time, setTime] = useState(new Date());
   const [background, setBackground] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-    return () => clearInterval(timer);
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
   }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,7 +67,7 @@ export default function App() {
   const timeParts = formatTimeParts(time);
 
   return (
-    <div className="relative h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-neutral-900">
+    <div ref={containerRef} className="relative h-screen w-screen flex flex-col items-center justify-center overflow-hidden bg-neutral-900">
       {/* Background Layer */}
       <AnimatePresence mode="wait">
         {background ? (
@@ -173,6 +194,14 @@ export default function App() {
                 >
                   <Upload size={16} />
                   <span>Upload</span>
+                </button>
+
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-2 rounded-full hover:bg-white/10 text-white/90 transition-colors"
+                  title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                  {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
                 </button>
 
                 {background && (
