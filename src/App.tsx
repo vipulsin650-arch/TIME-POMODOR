@@ -120,7 +120,7 @@ export default function App() {
                 referrerPolicy="no-referrer"
               />
             )}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
+            <div className="absolute inset-0 bg-transparent" />
           </motion.div>
         ) : (
           <motion.div
